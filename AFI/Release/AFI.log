@@ -1,0 +1,14 @@
+﻿  gk_afi.cpp
+  zpr.c
+  Trwa generowanie kodu
+  Previous IPDB was built with incompatible compiler, fall back to full compilation.
+  All 40 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Zakończono generowanie kodu
+  AFI.vcxproj -> D:\Users\michr\source\repos\GK\GK_AFI\AFI\Release\AFI.exe
+  Copying external run-time libraries
+  D:\Users\michr\source\repos\GK\GK_AFI\AFI\\..\external\libs\glut\release\glut32.dll
+  1 File(s) copied
+  D:\Users\michr\source\repos\GK\GK_AFI\AFI\\..\external\libs\osg\release\osg97-osg.dll
+  1 File(s) copied
+  D:\Users\michr\source\repos\GK\GK_AFI\AFI\\..\external\libs\OpenThreads\release\ot12-OpenThreads.dll
+  1 File(s) copied

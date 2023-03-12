@@ -1,0 +1,2 @@
+﻿  gk_afi.cpp
+F:\Uczelnia\GK\Laby\GK_AFI\src\zpr.h(56,10): fatal error C1083: Cannot open include file: 'GL/glut.h': No such file or directory
