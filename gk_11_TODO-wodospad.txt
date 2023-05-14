@@ -1,0 +1,297 @@
+#undef UNICODE
+#include <windows.h>
+#include <iostream>
+#include <vector>
+#include <list>
+#define GLUT_DISABLE_ATEXIT_HACK
+
+#include <math.h>
+#include <ctime>
+#include "GL/glut.h"
+#include <GL/gl.h>
+#include "teksture.h"
+//#include <math.h>
+
+using namespace std;
+
+static double x, y;
+static double dx = 1;
+static double dy = 0.5;
+static double cr = 0;
+
+struct SParticle
+{
+  GLfloat lifetime;					//current lifetime of the particle
+  GLfloat maximum_lifetime;                       //time of death of particle 
+  GLfloat r,g,b;                          // color values of the particle
+  GLfloat xpos,ypos,zpos;                 // position of the particle
+  GLfloat xspeed,yspeed,zspeed;           // speed of the particle
+  //TODO: add new parameters if needed
+};
+struct SVertex { 
+	GLfloat tx, ty;
+	GLfloat x, y, z;
+	
+};
+const float s = 0.5;
+SVertex bilboard[] = 
+{
+	{0,0,			-s,-s,0},
+	{0,1,			-s,s,0},
+	{1,1,			s,s,0},
+	{1,0,			s,-s,0}
+};
+const int MAX_PARTICLES = 500;
+list<SParticle> Particles;
+list<SParticle>::iterator particle_iter;
+//TODO: texture for particles - change if You want
+const char texture_name[] = "media//particlewhite.bmp";
+Ctexture *bilboard_tex;
+//Gaussian random number generator - mean 0.0, standard deviation 1.0
+float	NRand()
+{
+	 static int q = 15;
+	 static float c1 = (1 << q) - 1;
+	 static float c2 = ((int)(c1 / 3)) + 1;
+	 static float c3 = 1.f / c1;
+	/* random number in range 0 - 1 not including 1 */
+	float random = 0.f;
+
+	/* the white noise */
+	float noise = 0.f;
+	random = ((float)(rand()) / (float)(RAND_MAX + 1));
+	random = (2.f * ((random * c2) + (random * c2) + (random * c2)) - 3.f * (c2 - 1.f)) * c3;
+	return random;
+}
+//single bilboard drawing
+void bilboarddrawinglist()
+{
+	
+	glNewList(1,GL_COMPILE);
+	glPushMatrix();
+	// Wlaczamy tablice koordynatow tekstur
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);	
+	// Wlaczamy tablice wspolrzednych wierzcholkow
+	glEnableClientState(GL_VERTEX_ARRAY);
+
+
+	glInterleavedArrays( GL_T2F_V3F, 0, (GLvoid*)bilboard);
+	glDrawArrays(GL_QUADS, 0, 4);
+	glPopMatrix();
+	glEndList();
+}
+
+int initTexture(void) 
+{
+		glEnable(GL_TEXTURE_2D);
+
+		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+
+
+		// texture for particle
+
+		bilboard_tex = new Ctexture(texture_name);
+
+		//empty texture, currently not needed
+		//tekstury[0] = new Ctexture();
+		return true;
+}
+void drawScene(void)
+{
+   // Clear screen to background color.
+   glClear(GL_COLOR_BUFFER_BIT);
+
+   // Set foreground (or drawing) color.
+   glColor3f(1.0, 0.0, 0.0);
+
+   if(bilboard_tex)bilboard_tex->Bind();
+   list<SParticle>::iterator currP = Particles.begin();
+   //TODO 0: Set proper render states in OpenGL - blending and depth test
+   // glEnable() with GL_BLEND, glBlendFunc() with GL_ONE,GL_ONE and glDisable() GL_DEPTH_TEST
+   //notice what happens if they are not set
+
+   glEnable(GL_BLEND);
+   glBlendFunc(GL_ONE, GL_ONE);
+   glDisable(GL_DEPTH_TEST);
+
+   for(unsigned int i = 0;i<Particles.size();i++,currP++)
+   {
+	   glPushMatrix();
+	   
+	   //Draw particle
+	   //TODO 1: set particles params like color or size (glColor3f glScalef), posision is done for example
+	   
+	   glColor3f(currP->r, currP->g, currP->b);
+	   glTranslatef(currP->xpos,currP->ypos,currP->zpos);
+	   //...
+
+	   //Draw particle
+	   glCallList(1);
+	   glPopMatrix();
+   }
+   
+
+   
+   glutSwapBuffers();
+}
+
+// Initialization routine.
+void setup(void) 
+{
+	x = 0;
+	y = 0;
+   // Set background (or clearing) color.
+   glClearColor(0.0, 0.0, 0.0, 0.0); 
+   initTexture();
+   bilboarddrawinglist();
+   
+}
+
+// OpenGL window reshape routine.
+void resize(int w, int h)
+{
+   // Set viewport size to be entire OpenGL window.
+   glViewport(0, 0, (GLsizei)w, (GLsizei)h);
+  
+   // Set matrix mode to projection.
+   glMatrixMode(GL_PROJECTION);
+
+   // Clear current projection matrix to identity.
+   glLoadIdentity();
+
+   // Specify the orthographic (or perpendicular) projection, 
+   // i.e., define the viewing box.
+   gluPerspective(90,(float)w/(float)h,1,200);
+  //glOrtho(-10.0, 10.0, -10.0, 10.0,-10.0, 10.0);
+  //glFrustum(-10.0, 10.0, -10.0, 10.0, 5.0, 100.0); 
+
+   // Set matrix mode to modelview.
+   glMatrixMode(GL_MODELVIEW);
+
+   // Clear current modelview matrix to identity.
+   glLoadIdentity();
+}
+void EmitParticles()
+{
+	//TODO 2:
+	//Emit particles:
+	//set parameters for new particles (SParticle structure), 
+	//You can add new parameters to the SParticle structure
+	//For random numbers use NRand() - Gaussian  random number generator - mean 0.0, standard deviation 1.0
+	for(int i = 0;i<=15;i++)
+	{
+		SParticle NewPArticle = 
+		{/* current lifetime - 0 at start*/ 0,
+		/* maximum lifetime in seconds*/ abs(NRand())*0.2+1.0,
+		/*color R,G,B, float*/0.0, abs(NRand()) * 0.1 + 0.1, abs(NRand()) * 0.2 + 0.8,
+		/*pos: X = 0 , Y = -8, Z = -10 is around bottom*/NRand() * 3,4,-5,
+		/*speed*/ 0,0,0,
+		};
+
+		Particles.push_front(NewPArticle);
+	}
+}
+void AffectParticles()
+{
+	list<SParticle> ParticlesToRemove;
+	static std::clock_t  oldtime = std::clock();
+	std::clock_t newtime = std::clock();
+	double timebetweenframes = (double)(newtime - oldtime) / (double) CLOCKS_PER_SEC;
+
+	
+	particle_iter = Particles.begin();
+	while(particle_iter != Particles.end())
+	{
+		//TODO 3:
+		//update particle parameters:
+		//position, color (fading color for example), speed(gravity for example)
+		//timebetweenframes - delta time, can be used for updating position in current frame like: particle_iter->ypos + particle_iter->yspeed*timebetweenframes
+		//particle_iter->lifetime/particle_iter->maximum_lifetime - usefull proportion for changing color and size
+		//...
+
+		if(particle_iter->lifetime < 0.2)
+			particle_iter->yspeed += NRand() * 0.01 + 0.01;
+		else if (particle_iter->lifetime / particle_iter->maximum_lifetime > 0.7)
+		{
+			particle_iter->b -= 0.1;
+			particle_iter->g -= 0.1;
+		}
+
+		particle_iter->ypos -= particle_iter->yspeed;
+
+		//removing particles
+		particle_iter->lifetime = particle_iter->lifetime+timebetweenframes;
+		if(particle_iter->lifetime >= particle_iter->maximum_lifetime)
+		{
+			//if You need to create particles in place when other died (fireworks particle effect for example) 
+			//Then You can create them here like in TODO 1
+			particle_iter = Particles.erase(particle_iter);
+		}
+		else
+			particle_iter++;
+			
+	}
+	cout << Particles.size() << endl;
+
+	oldtime = newtime;
+}
+void animate() {
+	EmitParticles();
+	AffectParticles();
+    glutPostRedisplay();
+}
+
+// Keyboard input processing routine.
+void keyInput(unsigned char key, int x, int y)
+{
+
+}
+
+// Mouse callback routine.
+void mouseControl(int button, int state, int x, int y)
+{
+
+  
+}
+
+// Main routine: defines window properties, creates window,
+// registers callback routines and begins processing.
+int main(int argc, char **argv) 
+{  
+   // Initialize GLUT.
+   glutInit(&argc, argv);
+ 
+   // Set display mode as single-buffered and RGB color.
+   glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE );
+   
+   // Set OpenGL window size.
+   glutInitWindowSize(500, 500);
+
+   // Set position of OpenGL window upper-left corner.
+   glutInitWindowPosition(100, 100); 
+   
+   // Create OpenGL window with title.
+   glutCreateWindow("Laboratorium GK: 11_OGL");
+   
+   // Initialize.
+   setup(); 
+   
+   // Register display routine.
+   glutDisplayFunc(drawScene); 
+   
+   // Register reshape routine.
+   glutReshapeFunc(resize);  
+   
+
+   // Register the mouse and keyboard callback function. 
+   glutMouseFunc(mouseControl); 
+   glutKeyboardFunc(keyInput);
+
+
+   glutIdleFunc(animate);
+   // Begin processing.
+   glutMainLoop(); 
+
+   if(bilboard_tex) delete bilboard_tex;
+   return 0;  
+}
